@@ -1,6 +1,7 @@
 -- Nintendo Switch Pro Controller Input Display in Love2D
 -- by Terry Hearst
 
+local switched = false
 local debugMode = true
 
 local images = {}
@@ -97,25 +98,30 @@ function love.load()
 	images.r = love.graphics.newImage("images/R.png")
 end
 
-local prevSpace = false
 local base = 1
 
-function love.update(dt)
-	-- Debugging
-	if debugMode then
-		local space = love.keyboard.isDown("space")
-		if space and not prevSpace then
+function love.keypressed(key, scancode, isrepeat)
+	if key == "space" then
+		-- Debugging
+		if debugMode then
 			base = (base == 3) and 1 or (base + 1)
 		end
-		prevSpace = space
+	elseif key == "x" then
+		switched = not switched
+	elseif key == "a" then
+		switched = false
+	elseif key == "b" then
+		switched = true
 	end
+end
 
+function love.update(dt)
 	-- Poll controller inputs
 	if input and input:isGamepad() then
-		output.a = input:isGamepadDown("b")
-		output.b = input:isGamepadDown("a")
-		output.x = input:isGamepadDown("y")
-		output.y = input:isGamepadDown("x")
+		output.a = input:isGamepadDown(switched and "a" or "b")
+		output.b = input:isGamepadDown(switched and "b" or "a")
+		output.x = input:isGamepadDown(switched and "x" or "y")
+		output.y = input:isGamepadDown(switched and "y" or "x")
 
 		output.plus = input:isGamepadDown("start")
 		output.minus = input:isGamepadDown("back")
