@@ -5,7 +5,7 @@ local switched = false
 
 local images = {}
 local input
-local output = {}
+local output = {leftx = 0, lefty = 0, rightx = 0, righty = 0}
 
 
 -----------------------------
@@ -35,6 +35,13 @@ sdl.SDL_SetHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1")
 
 pressedColor = {.2, 1, .2}
 defaultColor = {1, 1, 1}
+
+local function findJoystick()
+	for i, joystick in ipairs(love.joystick.getJoysticks()) do
+		if joystick:isGamepad() then return joystick end
+	end
+	return nil
+end
 
 local function drawButton(pressed, x, y, diameter)
 	diameter = diameter or 52
@@ -86,9 +93,7 @@ function love.load()
 	love.graphics.present()
 
 	-- Find joystick
-	if love.joystick.getJoystickCount() > 0 then
-		input = love.joystick.getJoysticks()[1]
-	end
+	input = findJoystick()
 
 	-- Load images
 	images.base = love.graphics.newImage("images/ProOverlay.png")
@@ -108,9 +113,17 @@ function love.keypressed(key, scancode, isrepeat)
 	end
 end
 
+function love.joystickadded(joystick)
+	input = findJoystick()
+end
+
+function love.joystickremoved(joystick)
+	input = findJoystick()
+end
+
 function love.update(dt)
 	-- Poll controller inputs
-	if input and input:isGamepad() then
+	if input then
 		output.a = input:isGamepadDown(switched and "a" or "b")
 		output.b = input:isGamepadDown(switched and "b" or "a")
 		output.x = input:isGamepadDown(switched and "x" or "y")
