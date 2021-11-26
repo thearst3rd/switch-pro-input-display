@@ -5,7 +5,7 @@ local switched = false
 
 local images = {}
 local input
-local output = {leftx = 0, lefty = 0, rightx = 0, righty = 0}
+local output = {leftx = 0, lefty = 0}
 
 
 -----------------------------
@@ -56,7 +56,7 @@ end
 
 local function drawDpad(pressed, x, y, sideways)
 	love.graphics.setColor(pressed and pressedColor or defaultColor)
-	love.graphics.rectangle("fill", x-.5, y-.5, (sideways and 36 or 33)+1, (sideways and 33 or 36)+1)
+	love.graphics.rectangle("fill", x-.5, y-.5, (sideways and 32 or 26)+1, (sideways and 26 or 32)+1)
 end
 
 local function drawBumper(pressed, image)
@@ -96,22 +96,12 @@ function love.load()
 	input = findJoystick()
 
 	-- Load images
-	images.base = love.graphics.newImage("images/ProOverlay.png")
-	images.l = love.graphics.newImage("images/L.png")
-	images.r = love.graphics.newImage("images/R.png")
+	images.base = love.graphics.newImage("images/base.png")
+	images.l = love.graphics.newImage("images/l.png")
+	images.r = love.graphics.newImage("images/r.png")
 end
 
 local base = 1
-
-function love.keypressed(key, scancode, isrepeat)
-	if key == "x" then
-		switched = not switched
-	elseif key == "a" then
-		switched = false
-	elseif key == "b" then
-		switched = true
-	end
-end
 
 function love.joystickadded(joystick)
 	input = findJoystick()
@@ -124,63 +114,55 @@ end
 function love.update(dt)
 	-- Poll controller inputs
 	if input then
-		output.a = input:isGamepadDown(switched and "a" or "b")
-		output.b = input:isGamepadDown(switched and "b" or "a")
-		output.x = input:isGamepadDown(switched and "x" or "y")
-		output.y = input:isGamepadDown(switched and "y" or "x")
-
-		output.plus = input:isGamepadDown("start")
-		output.minus = input:isGamepadDown("back")
-		output.home = input:isGamepadDown("guide")
-		output.screenshot = false 	-- No way to detect with Magic-NS on XInput mode
-
 		output.l = input:isGamepadDown("leftshoulder")
 		output.r = input:isGamepadDown("rightshoulder")
 
-		output.zl = input:getGamepadAxis("triggerleft") > 0.5
-		output.zr = input:getGamepadAxis("triggerright") > 0.5
+		output.cup = input:getGamepadAxis("righty") < -0.5
+		output.cdown = input:getGamepadAxis("righty") > 0.5
+		output.cleft = input:getGamepadAxis("rightx") < -0.5
+		output.cright = input:getGamepadAxis("rightx") > 0.5
 
-		for _, v in pairs{"leftstick", "rightstick", "dpup", "dpdown", "dpleft", "dpright"} do
+		output.z = input:getGamepadAxis("triggerleft") > 0.5
+
+		for _, v in pairs{"a", "b", "start", "dpup", "dpdown", "dpleft", "dpright"} do
 			output[v] = input:isGamepadDown(v)
 		end
 
-		for _, v in pairs{"leftx", "lefty", "rightx", "righty"} do
+		for _, v in pairs{"leftx", "lefty"} do
 			output[v] = input:getGamepadAxis(v)
 		end
 	end
 end
 
 function love.draw()
+	-- Draw L and R below controller base
+	drawBumper(output.l, images.l)
+	drawBumper(output.r, images.r)
+
 	-- Draw controller base
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.draw(images.base)
 
 	-- Draw all controller buttons
-	drawButton(output.a, 618, 176)
-	drawButton(output.b, 562, 224)
-	drawButton(output.x, 562, 128)
-	drawButton(output.y, 506, 176)
+	drawButton(output.a, 390, 270, 53)
+	drawButton(output.b, 342, 221, 53)
 
-	drawButton(output.plus, 472, 132, 30)
-	drawButton(output.minus, 295, 132, 30)
-	drawButton(output.home, 434, 186, 30)
-	drawScreenshotButton(output.screenshot, 335, 188)
+	drawButton(output.start, 307, 150, 43)
+
+	drawButton(output.cup, 449, 148, 39)
+	drawButton(output.cdown, 449, 225, 39)
+	drawButton(output.cleft, 411, 187, 39)
+	drawButton(output.cright, 487, 187, 39)
 
 	love.graphics.setColor(1, 1, 1)
-	love.graphics.rectangle("fill", 272, 248, 33, 105)
-	love.graphics.rectangle("fill", 236, 284, 105, 33)
+	love.graphics.rectangle("fill", 316, 296 + 32, 26, 26)
 
-	drawDpad(output.dpup, 272, 248)
-	drawDpad(output.dpdown, 272, 248 + 105 - 36)
-	drawDpad(output.dpleft, 236, 284, true)
-	drawDpad(output.dpright, 236 + 105 - 36, 284, true)
+	drawDpad(output.dpup, 316, 296)
+	drawDpad(output.dpdown, 316, 296 + 32 + 26)
+	drawDpad(output.dpleft, 316 - 32, 296 + 32, true)
+	drawDpad(output.dpright, 316 + 26, 296 + 32, true)
 
-	drawBumper(output.l, images.l)
-	drawBumper(output.r, images.r)
+	drawTrigger(output.z, 186, 34)
 
-	drawTrigger(output.zl, 186, 34)
-	drawTrigger(output.zr, 610, 34, true)
-
-	drawAnalog(output.leftstick, 202, 202, output.leftx, output.lefty)
-	drawAnalog(output.rightstick, 493, 301, output.rightx, output.righty)
+	drawAnalog(false, 204, 239, output.leftx, output.lefty)
 end
