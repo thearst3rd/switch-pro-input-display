@@ -19,6 +19,4 @@ I connect my pro controller using a [Mayflash MagicNS](https://mayflash.com/prod
 
 ## License
 
-I made this a while ago and it's like <200 lines of code, do whatever you want lol
-
-`images/FullPro.png` is not mine, I found it online and I'm not sure where its original source is anymore ¯\\\_(ツ)\_/¯ The other images are all created by me though, go nuts
+I made this a while ago and it's like <200 lines of code and a few traced images, do whatever you want lol

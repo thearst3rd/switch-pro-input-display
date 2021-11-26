@@ -2,7 +2,6 @@
 -- by Terry Hearst
 
 local switched = false
-local debugMode = true
 
 local images = {}
 local input
@@ -93,7 +92,6 @@ function love.load()
 
 	-- Load images
 	images.base = love.graphics.newImage("images/ProOverlay.png")
-	images.full = love.graphics.newImage("images/FullPro.png")
 	images.l = love.graphics.newImage("images/L.png")
 	images.r = love.graphics.newImage("images/R.png")
 end
@@ -101,12 +99,7 @@ end
 local base = 1
 
 function love.keypressed(key, scancode, isrepeat)
-	if key == "space" then
-		-- Debugging
-		if debugMode then
-			base = (base == 3) and 1 or (base + 1)
-		end
-	elseif key == "x" then
+	if key == "x" then
 		switched = not switched
 	elseif key == "a" then
 		switched = false
@@ -145,42 +138,36 @@ function love.update(dt)
 end
 
 function love.draw()
-	-- Debugging
+	-- Draw controller base
 	love.graphics.setColor(1, 1, 1)
-	if base < 2 then
-		love.graphics.draw(images.base)
-	else
-		love.graphics.draw(images.full)
-	end
+	love.graphics.draw(images.base)
 
 	-- Draw all controller buttons
-	if base < 3 then
-		drawButton(output.a, 618, 176)
-		drawButton(output.b, 562, 224)
-		drawButton(output.x, 562, 128)
-		drawButton(output.y, 506, 176)
+	drawButton(output.a, 618, 176)
+	drawButton(output.b, 562, 224)
+	drawButton(output.x, 562, 128)
+	drawButton(output.y, 506, 176)
 
-		drawButton(output.plus, 472, 132, 30)
-		drawButton(output.minus, 295, 132, 30)
-		drawButton(output.home, 434, 186, 30)
-		drawScreenshotButton(output.screenshot, 335, 188)
+	drawButton(output.plus, 472, 132, 30)
+	drawButton(output.minus, 295, 132, 30)
+	drawButton(output.home, 434, 186, 30)
+	drawScreenshotButton(output.screenshot, 335, 188)
 
-		love.graphics.setColor(1, 1, 1)
-		love.graphics.rectangle("fill", 272, 248, 33, 105)
-		love.graphics.rectangle("fill", 236, 284, 105, 33)
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.rectangle("fill", 272, 248, 33, 105)
+	love.graphics.rectangle("fill", 236, 284, 105, 33)
 
-		drawDpad(output.dpup, 272, 248)
-		drawDpad(output.dpdown, 272, 248 + 105 - 36)
-		drawDpad(output.dpleft, 236, 284, true)
-		drawDpad(output.dpright, 236 + 105 - 36, 284, true)
+	drawDpad(output.dpup, 272, 248)
+	drawDpad(output.dpdown, 272, 248 + 105 - 36)
+	drawDpad(output.dpleft, 236, 284, true)
+	drawDpad(output.dpright, 236 + 105 - 36, 284, true)
 
-		drawBumper(output.l, images.l)
-		drawBumper(output.r, images.r)
+	drawBumper(output.l, images.l)
+	drawBumper(output.r, images.r)
 
-		drawTrigger(output.zl, 186, 34)
-		drawTrigger(output.zr, 610, 34, true)
+	drawTrigger(output.zl, 186, 34)
+	drawTrigger(output.zr, 610, 34, true)
 
-		drawAnalog(output.leftstick, 202, 202, output.leftx, output.lefty)
-		drawAnalog(output.rightstick, 493, 301, output.rightx, output.righty)
-	end
+	drawAnalog(output.leftstick, 202, 202, output.leftx, output.lefty)
+	drawAnalog(output.rightstick, 493, 301, output.rightx, output.righty)
 end
