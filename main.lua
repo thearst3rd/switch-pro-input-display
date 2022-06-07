@@ -1,11 +1,8 @@
--- Nintendo Switch Pro Controller Input Display in Love2D
+-- Guitar Hero Controller Input Display in Love2D
 -- by Terry Hearst
 
-local switched = false
-
-local images = {}
 local input
-local output = {leftx = 0, lefty = 0, rightx = 0, righty = 0}
+local output = {analogx = 0, analogy = 0, whammy = 0}
 
 
 -----------------------------
@@ -37,41 +34,69 @@ pressedColor = {.2, 1, .2}
 defaultColor = {1, 1, 1}
 
 local function findJoystick()
-	for i, joystick in ipairs(love.joystick.getJoysticks()) do
-		if joystick:isGamepad() then return joystick end
+	return love.joystick.getJoysticks()[1]
+end
+
+local function drawFret(color, pressed, x, y, text)
+	local oldR, oldG, oldB, oldA = love.graphics.getColor()
+
+	local newColor = {color[1], color[2], color[3], color[4]}
+	if not pressed then
+		newColor[1] = newColor[1] * 0.5
+		newColor[2] = newColor[2] * 0.5
+		newColor[3] = newColor[3] * 0.5
 	end
-	return nil
+	love.graphics.setColor(newColor[1], newColor[2], newColor[3], newColor[4])
+
+	love.graphics.rectangle("fill", x, y, 120, 50)
+
+	love.graphics.setColor(oldR, oldG, oldB, oldA)
+
+	if text then
+		love.graphics.printf(text, x, y + 10, 120, "center")
+	end
 end
 
-local function drawButton(pressed, x, y, diameter)
-	diameter = diameter or 52
-	love.graphics.setColor(pressed and pressedColor or defaultColor)
-	love.graphics.circle("fill", x + diameter/2, y + diameter/2, diameter/2)
+
+local function drawStrum(color, pressed, x, y, text)
+	local oldR, oldG, oldB, oldA = love.graphics.getColor()
+
+	local newColor = {color[1], color[2], color[3], color[4]}
+	if not pressed then
+		newColor[1] = newColor[1] * 0.5
+		newColor[2] = newColor[2] * 0.5
+		newColor[3] = newColor[3] * 0.5
+	end
+	love.graphics.setColor(newColor[1], newColor[2], newColor[3], newColor[4])
+
+	love.graphics.rectangle("fill", x, y, 150, 40)
+
+	love.graphics.setColor(oldR, oldG, oldB, oldA)
+
+	if text then
+		love.graphics.printf(text, x, y + 6, 150, "center")
+	end
 end
 
-local function drawScreenshotButton(pressed, x, y)
-	love.graphics.setColor(pressed and pressedColor or defaultColor)
-	love.graphics.rectangle("fill", x-.5, y-.5, 27+1, 27+1)
-end
+local function drawOther(color, pressed, x, y, text)
+	local oldR, oldG, oldB, oldA = love.graphics.getColor()
 
-local function drawDpad(pressed, x, y, sideways)
-	love.graphics.setColor(pressed and pressedColor or defaultColor)
-	love.graphics.rectangle("fill", x-.5, y-.5, (sideways and 36 or 33)+1, (sideways and 33 or 36)+1)
-end
+	local newColor = {color[1], color[2], color[3], color[4]}
+	if not pressed then
+		newColor[1] = newColor[1] * 0.5
+		newColor[2] = newColor[2] * 0.5
+		newColor[3] = newColor[3] * 0.5
+	end
+	love.graphics.setColor(newColor[1], newColor[2], newColor[3], newColor[4])
 
-local function drawBumper(pressed, image)
-	love.graphics.setColor(pressed and pressedColor or defaultColor)
-	love.graphics.draw(image)
-end
+	love.graphics.circle("fill", x + 18, y + 18, 18)
+	love.graphics.circle("fill", x + 132 - 18, y + 18, 18)
+	love.graphics.rectangle("fill", x + 18, y, 132 - 36, 36)
 
-local function drawTrigger(pressed, x, y, zr)
-	if pressed then
-		love.graphics.push()
-			love.graphics.setColor(pressedColor)
-			love.graphics.translate(x, y)
-			love.graphics.rotate(zr and 0.2 or -0.2)
-			love.graphics.rectangle("fill", -29, -20, 58, 40)
-		love.graphics.pop()
+	love.graphics.setColor(oldR, oldG, oldB, oldA)
+
+	if text then
+		love.graphics.printf(text, x, y + 3, 132, "center")
 	end
 end
 
@@ -86,6 +111,8 @@ end
 --------------------
 
 function love.load()
+	love.graphics.setFont(love.graphics.newFont(24))
+
 	-- Show initial loading screen
 	love.graphics.setBackgroundColor(89/255, 157/255, 220/255)
 	love.graphics.clear(89/255, 157/255, 220/255)
@@ -94,23 +121,6 @@ function love.load()
 
 	-- Find joystick
 	input = findJoystick()
-
-	-- Load images
-	images.base = love.graphics.newImage("images/ProOverlay.png")
-	images.l = love.graphics.newImage("images/L.png")
-	images.r = love.graphics.newImage("images/R.png")
-end
-
-local base = 1
-
-function love.keypressed(key, scancode, isrepeat)
-	if key == "x" then
-		switched = not switched
-	elseif key == "a" then
-		switched = false
-	elseif key == "b" then
-		switched = true
-	end
 end
 
 function love.joystickadded(joystick)
@@ -124,63 +134,50 @@ end
 function love.update(dt)
 	-- Poll controller inputs
 	if input then
-		output.a = input:isGamepadDown(switched and "a" or "b")
-		output.b = input:isGamepadDown(switched and "b" or "a")
-		output.x = input:isGamepadDown(switched and "x" or "y")
-		output.y = input:isGamepadDown(switched and "y" or "x")
+		output.green = input:isDown(1)
+		output.red = input:isDown(2)
+		output.yellow = input:isDown(3)
+		output.blue = input:isDown(4)
+		output.orange = input:isDown(5)
 
-		output.plus = input:isGamepadDown("start")
-		output.minus = input:isGamepadDown("back")
-		output.home = input:isGamepadDown("guide")
-		output.screenshot = false 	-- No way to detect with Magic-NS on XInput mode
+		output.down = input:isDown(6)
+		output.up = input:isDown(9)
 
-		output.l = input:isGamepadDown("leftshoulder")
-		output.r = input:isGamepadDown("rightshoulder")
+		output.plus = input:isDown(7)
+		output.minus = input:isDown(8)
 
-		output.zl = input:getGamepadAxis("triggerleft") > 0.5
-		output.zr = input:getGamepadAxis("triggerright") > 0.5
+		output.analogx = input:getAxis(1)
+		output.analogy = input:getAxis(2)
 
-		for _, v in pairs{"leftstick", "rightstick", "dpup", "dpdown", "dpleft", "dpright"} do
-			output[v] = input:isGamepadDown(v)
-		end
-
-		for _, v in pairs{"leftx", "lefty", "rightx", "righty"} do
-			output[v] = input:getGamepadAxis(v)
-		end
+		output.whammy = input:getAxis(3) * 1.2 	-- it doesn't seem to reach all the way to 1.0 on its own
+		if output.whammy < 0 then output.whammy = 0 end
+		if output.whammy > 1 then output.whammy = 1 end
 	end
 end
 
 function love.draw()
-	-- Draw controller base
 	love.graphics.setColor(1, 1, 1)
-	love.graphics.draw(images.base)
+	drawFret({0, 1, 0}, output.green,    10 + (0 * 130), 10, "left")
+	drawFret({1, 0, 0}, output.red,      10 + (1 * 130), 10, "right")
+	drawFret({1, 1, 0}, output.yellow,   10 + (2 * 130), 10, "jump")
+	drawFret({0, 0, 1}, output.blue,     10 + (3 * 130), 10, "power")
+	drawFret({1, 0.5, 0}, output.orange, 10 + (4 * 130), 10, "cam left")
 
-	-- Draw all controller buttons
-	drawButton(output.a, 618, 176)
-	drawButton(output.b, 562, 224)
-	drawButton(output.x, 562, 128)
-	drawButton(output.y, 506, 176)
+	drawStrum({0.5, 0.5, 0.5}, output.up, 30, 80, "back")
+	drawStrum({0.5, 0.5, 0.5}, output.down, 30, 80 + 50, "forward")
 
-	drawButton(output.plus, 472, 132, 30)
-	drawButton(output.minus, 295, 132, 30)
-	drawButton(output.home, 434, 186, 30)
-	drawScreenshotButton(output.screenshot, 335, 188)
+	drawOther({0.5, 0.5, 0.5}, output.plus, 220, 82, "pause")
+	drawOther({0.5, 0.5, 0.5}, output.minus, 220, 82 + 46, "restart")
 
-	love.graphics.setColor(1, 1, 1)
-	love.graphics.rectangle("fill", 272, 248, 33, 105)
-	love.graphics.rectangle("fill", 236, 284, 105, 33)
+	love.graphics.push()
+		love.graphics.translate(420, 100)
+		love.graphics.setColor(0, 0, 0)
+		love.graphics.rectangle("fill", 0, 0, 200, 50)
 
-	drawDpad(output.dpup, 272, 248)
-	drawDpad(output.dpdown, 272, 248 + 105 - 36)
-	drawDpad(output.dpleft, 236, 284, true)
-	drawDpad(output.dpright, 236 + 105 - 36, 284, true)
+		love.graphics.setColor(0.6, 0.6, 0.6)
+		love.graphics.rectangle("fill", 200 * (1 - output.whammy), 0, 200 * output.whammy, 50)
 
-	drawBumper(output.l, images.l)
-	drawBumper(output.r, images.r)
-
-	drawTrigger(output.zl, 186, 34)
-	drawTrigger(output.zr, 610, 34, true)
-
-	drawAnalog(output.leftstick, 202, 202, output.leftx, output.lefty)
-	drawAnalog(output.rightstick, 493, 301, output.rightx, output.righty)
+		love.graphics.setColor(1, 1, 1)
+		love.graphics.printf("cam right", 0, 10, 200, "center")
+	love.graphics.pop()
 end
